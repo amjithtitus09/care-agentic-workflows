@@ -79,13 +79,11 @@ cat <<EOF
 
 ==> Done. Now configure in $TARGET_SLUG (Settings → Secrets and variables → Actions):
 
-  Variable  CARE_AW_APP_ID            GitHub App id (App installed on the repo with
-                                      contents:rw, pull-requests:rw, issues:rw)
-  Secret    CARE_AW_APP_PRIVATE_KEY   the App's private key (PEM)
+  Secret    GH_AW_AGENT_TOKEN         fine-grained PAT of a write-access user
+                                      (contents:rw, pull-requests:rw, issues:rw on
+                                      this repo) — used for all state-machine
+                                      writes so label events cascade
   Secret    JIRA_* / others           whatever the jira-pr-author workflow expects
-  (Optional) Secret GH_AW_AGENT_TOKEN legacy write-access PAT; only needed if the
-                                      Copilot coding agent ignores App-authored
-                                      @copilot mentions (see shared/request-rework.md)
 
 Then commit the changes in $TARGET and push.
 Update later with: cd $TARGET && gh aw update

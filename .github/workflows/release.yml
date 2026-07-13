@@ -23,20 +23,13 @@ jobs:
   rollout:
     runs-on: ubuntu-latest
     steps:
-      - name: Mint App token (must be installed on all consumers)
-        id: app-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ vars.CARE_AW_APP_ID }}
-          private-key: ${{ secrets.CARE_AW_APP_PRIVATE_KEY }}
-          owner: amjithtitus09
       - name: Install gh-aw
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GH_AW_AGENT_TOKEN }}
         run: gh extension install github/gh-aw
       - name: Open update PRs
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GH_AW_AGENT_TOKEN }}
           REF: ${{ inputs.ref || github.ref_name }}
         run: |
           set -euo pipefail

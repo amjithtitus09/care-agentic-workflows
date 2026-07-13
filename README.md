@@ -31,14 +31,21 @@ automation PR).
 
 ## Tokens
 
-Workflows use a **GitHub App** (not a PAT) for all writes that must cascade past
-GitHub's recursion guard (state labels, review verdicts, `@copilot` rework
-comments). See `workflows/shared/app-token.md` and `docs/TOKENS.md`.
+Workflows use a fine-grained **PAT** (`GH_AW_AGENT_TOKEN`) for all writes that
+must cascade past GitHub's recursion guard (state labels, review verdicts,
+`@copilot` rework comments). The PAT must belong to a user with write access and
+be scoped to the consumer repo with contents:rw, pull-requests:rw, issues:rw.
 
 Required consumer configuration:
 
-- Variable `CARE_AW_APP_ID` — the GitHub App id
-- Secret `CARE_AW_APP_PRIVATE_KEY` — the App private key (PEM)
+- Secret `GH_AW_AGENT_TOKEN` — the fine-grained PAT
+- Everything falls back to the default `GITHUB_TOKEN` when unset (workflows still
+  run, but downstream label-triggered workflows will NOT fire and the `@copilot`
+  hand-back will be ignored).
+
+A GitHub App can replace the PAT later (short-lived installation tokens, bot
+attribution) by switching `github-token:` entries to a `github-app:` block —
+see the gh-aw docs.
 
 ## Releasing
 
