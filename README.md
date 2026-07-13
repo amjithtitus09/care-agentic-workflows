@@ -1,7 +1,7 @@
 # care-agentic-workflows
 
 Canonical source repo for the Jira → PR agentic workflow system (gh-aw) used by
-`care_fe` (and future ohcnetwork repos). Workflow **sources** live here; consuming
+`care_fe` (and future repos). Workflow **sources** live here; consuming
 repos carry only thin `.md` stubs (with `source:` pins) plus compiled `.lock.yml`
 artifacts, installed and refreshed via `gh aw`.
 

@@ -2,7 +2,7 @@
 # Install (or refresh) the care agentic workflow pack into a consumer repo.
 #
 # Usage:
-#   ./scripts/install.sh --target ../care_fe [--ref v1.0.0] [--repo ohcnetwork/care-agentic-workflows]
+#   ./scripts/install.sh --target ../care_fe [--ref v1.0.0] [--repo amjithtitus09/care-agentic-workflows]
 #
 # What it does:
 #   1. `gh aw add <repo>/workflows/<name>@<ref>` for every agentic workflow source
@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-SOURCE_REPO="ohcnetwork/care-agentic-workflows"
+SOURCE_REPO="amjithtitus09/care-agentic-workflows"
 REF="main"
 TARGET=""
 

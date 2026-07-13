@@ -116,7 +116,7 @@ and never weakens tests to go green.
 
 ## Operating it
 
-1. Seed labels: `./.github/scripts/seed-state-labels.sh ohcnetwork/care_fe`
+1. Seed labels: `./.github/scripts/seed-state-labels.sh amjithtitus09/care_fe`
 2. Apply `jira-agent` to a PR (or open one with it) → it enters at `state:needs-qa`.
 3. Watch the label advance. Re-run any stage by re-applying its `state:*` label.
 4. A human merges once a PR reaches `state:qa-passed`, or takes over on `state:needs-human`.

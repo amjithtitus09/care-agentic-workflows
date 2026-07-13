@@ -17,7 +17,7 @@ permissions:
 
 env:
   # Registered consumer repos (space-separated).
-  CONSUMERS: "ohcnetwork/care_fe"
+  CONSUMERS: "amjithtitus09/care_fe"
 
 jobs:
   rollout:
@@ -29,7 +29,7 @@ jobs:
         with:
           app-id: ${{ vars.CARE_AW_APP_ID }}
           private-key: ${{ secrets.CARE_AW_APP_PRIVATE_KEY }}
-          owner: ohcnetwork
+          owner: amjithtitus09
       - name: Install gh-aw
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
