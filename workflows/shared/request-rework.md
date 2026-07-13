@@ -147,10 +147,11 @@ safe-outputs:
 
               if (process.env.HAS_AGENT_TOKEN !== "true") {
                 core.warning(
-                  "GH_AW_AGENT_TOKEN is not configured; posting the hand-back as the " +
+                  "Neither the GitHub App (CARE_AW_APP_ID/CARE_AW_APP_PRIVATE_KEY) nor the " +
+                    "legacy GH_AW_AGENT_TOKEN PAT is configured; posting the hand-back with the " +
                     "default Actions token. The Copilot coding agent only responds to " +
-                    "comments from users with write access, so it will NOT pick this up. " +
-                    "Add the GH_AW_AGENT_TOKEN PAT to enable autonomous rework.",
+                    "write-access identities, so it will NOT pick this up. " +
+                    "Configure the App (or the PAT) to enable autonomous rework.",
                 );
               }
 
