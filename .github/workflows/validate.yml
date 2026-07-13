@@ -1,0 +1,49 @@
+name: Validate workflow sources
+
+# CI for this source repo: every agentic workflow source must compile cleanly with
+# the pinned gh-aw version, and shell/YAML glue must lint.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install gh-aw
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh extension install github/gh-aw
+      - name: Compile every workflow source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # gh aw compile expects sources in .github/workflows — stage a scratch
+          # repo mirroring a consumer layout.
+          scratch="$(mktemp -d)"
+          mkdir -p "$scratch/.github/workflows/shared"
+          cp workflows/*.md "$scratch/.github/workflows/"
+          cp workflows/shared/*.md "$scratch/.github/workflows/shared/"
+          cd "$scratch"
+          git init -q .
+          gh aw compile --strict
+          echo "All sources compiled."
+  lint-glue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck scripts
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q shellcheck
+          shellcheck scripts/*.sh
+      - name: yamllint glue
+        run: |
+          pipx install yamllint
+          yamllint -d "{extends: relaxed, rules: {line-length: {max: 140}}}" glue/ .github/workflows/

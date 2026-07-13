@@ -1,0 +1,67 @@
+name: Release — open update PRs in consumers
+
+# When a version tag is pushed, open a PR in each registered consumer repo that
+# runs `gh aw update` against the new ref, refreshing stubs + lock files.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Ref/tag to roll out (defaults to the pushed tag)"
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  # Registered consumer repos (space-separated).
+  CONSUMERS: "ohcnetwork/care_fe"
+
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mint App token (must be installed on all consumers)
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.CARE_AW_APP_ID }}
+          private-key: ${{ secrets.CARE_AW_APP_PRIVATE_KEY }}
+          owner: ohcnetwork
+      - name: Install gh-aw
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: gh extension install github/gh-aw
+      - name: Open update PRs
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REF: ${{ inputs.ref || github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config --global user.name "care-aw-bot"
+          git config --global user.email "care-aw-bot@users.noreply.github.com"
+          for repo in $CONSUMERS; do
+            echo "==> $repo"
+            dir="$(mktemp -d)"
+            gh repo clone "$repo" "$dir" -- --depth 1
+            cd "$dir"
+            branch="chore/gh-aw-update-$REF"
+            git checkout -b "$branch"
+            gh aw update --ref "$REF" || gh aw update
+            gh aw compile
+            if git diff --quiet; then
+              echo "No changes for $repo"; cd -; continue
+            fi
+            git add -A
+            git commit -m "chore: update agentic workflows to $REF"
+            git push -u origin "$branch"
+            gh pr create --repo "$repo" \
+              --title "chore: update agentic workflows to $REF" \
+              --body "Automated rollout of care-agentic-workflows \`$REF\`. Review the compiled lock diffs before merging." \
+              --base develop || gh pr create --repo "$repo" \
+              --title "chore: update agentic workflows to $REF" \
+              --body "Automated rollout of care-agentic-workflows \`$REF\`." 
+            cd -
+          done
