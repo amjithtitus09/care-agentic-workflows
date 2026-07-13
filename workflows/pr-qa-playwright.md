@@ -36,7 +36,13 @@ permissions: read-all
 
 engine:
   id: copilot
-  model: claude-opus-4.8
+  # QA is navigation + DOM reasoning + vision (screenshot verification) + tool
+  # orchestration — not deep code generation. Sonnet-4.5 delivers top-tier agentic
+  # tool-use and vision at the STANDARD (non-premium) Copilot request tier, so a
+  # heavy ~55-min QA run no longer exhausts the premium-request / AI-credit budget
+  # and 403s at the steering proxy (opus did — see PR #104/#106 failures 2026-07-13).
+  # Authoring stays on opus (jira-pr-author) where deep reasoning actually pays off.
+  model: claude-sonnet-4.5
 
 # The happy path (mark running → log in → seed if needed → navigate → screenshot → upload →
 # comment → labels) fits comfortably here; the cap bounds wall-clock so a single run never
