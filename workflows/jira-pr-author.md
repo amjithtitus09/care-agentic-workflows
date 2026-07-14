@@ -122,6 +122,30 @@ steps:
         printf '%s\n' "$desc"
       } > /tmp/gh-aw/agent/jira-task.md
       echo "Wrote validated task for $key to /tmp/gh-aw/agent/jira-task.md"
+      printf '%s' "$key" > /tmp/gh-aw/agent/issue-key.txt
+  - name: Idempotency guard — re-dispatch of a ticket that already has an open PR
+    env:
+      # Agent PAT so the state-label write cascades (default GITHUB_TOKEN label events are
+      # suppressed by the recursion guard and would never re-fire the QA machine).
+      GH_TOKEN: ${{ secrets.GH_AW_AGENT_TOKEN || secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    run: |
+      set -euo pipefail
+      key="$(cat /tmp/gh-aw/agent/issue-key.txt)"
+      echo "none" > /tmp/gh-aw/agent/existing-pr.txt
+      pr="$(gh pr list --repo "$REPO" --state open --head "jira/${key}" --json number --jq '.[0].number // empty' || true)"
+      if [ -n "$pr" ]; then
+        echo "Open PR #$pr already exists for jira/${key} — re-entering it into QA instead of re-authoring."
+        printf '%s' "$pr" > /tmp/gh-aw/agent/existing-pr.txt
+        # Clear any state label, then apply the QA entry label (single edit per call; the
+        # remove is a no-op for labels the PR does not carry).
+        gh pr edit "$pr" --repo "$REPO" \
+          --remove-label 'state:qa-running' --remove-label 'state:qa-passed' \
+          --remove-label 'state:needs-rework' --remove-label 'state:needs-human' || true
+        sleep 2
+        gh pr edit "$pr" --repo "$REPO" --add-label 'state:needs-qa' || true
+        gh pr comment "$pr" --repo "$REPO" --body "🔁 Jira re-dispatch for **${key}** detected while this PR is open — re-entered it into Visual QA (**state:needs-qa**) instead of authoring a duplicate."
+      fi
 ---
 
 # Jira → Draft PR Author (pinned model)
@@ -146,7 +170,14 @@ to you. Specifically:
 
 ## The task
 
-Your task specification has already been **validated and sanitized** by a pre-step and written to
+**Step 0 — check for an existing PR first.** Run `cat /tmp/gh-aw/agent/existing-pr.txt`. If it
+contains a PR number (anything other than `none`), this ticket **already has an open draft PR**
+and a runner pre-step has just re-entered it into Visual QA. Do **not** author anything, do not
+touch the repo, do not call `create_pull_request` — call the `noop` safe output with a one-line
+explanation (e.g. "ENG-503 already delivered as PR #104; re-dispatched into QA") and stop.
+
+Otherwise (`none`): your task specification has already been **validated and sanitized** by a
+pre-step and written to
 `/tmp/gh-aw/agent/jira-task.md`. **Read that file first** (e.g. `cat /tmp/gh-aw/agent/jira-task.md`).
 It contains:
 
